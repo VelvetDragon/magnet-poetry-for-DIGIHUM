@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Magnet Poetry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f6f3;
+  --surface: #ffffff;
+  --board: #eceae5;
+  --board-accent: #e4e1db;
+  --text: #2c2c2c;
+  --text-muted: #999;
+  --text-light: #bbb;
+  --border: #e8e6e1;
+  --accent: #3d3d3d;
+  --magnet-bg: #fff;
+  --magnet-shadow: rgba(0,0,0,0.06);
+  --magnet-border: #e0ddd7;
+  --hover: #f0eee9;
+  --success: #5a7a5a;
+  --error: #a05050;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+  min-height: 100vh;
+}
+
+/* ── Nav ─────────────────────────────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 56px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.nav-logo {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+.nav-tabs {
+  display: flex;
+  gap: 4px;
+}
+.nav-tab {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.2px;
+}
+.nav-tab:hover { color: var(--text); background: var(--hover); }
+.nav-tab.active { color: var(--text); background: var(--bg); }
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sound-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.sound-btn:hover { background: var(--hover); color: var(--text); }
+.sound-btn.muted { opacity: 0.4; }
+
+/* ── Panels ──────────────────────────────────────────── */
+.panel { display: none; height: calc(100vh - 56px); }
+.panel.active { display: flex; }
+
+/* ── Magnet ──────────────────────────────────────────── */
+.magnet {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--magnet-bg);
+  border: 1px solid var(--magnet-border);
+  padding: 4px 14px;
+  border-radius: 3px;
+  cursor: grab;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px var(--magnet-shadow);
+  transition: box-shadow 0.15s, transform 0.08s;
+  touch-action: none;
+  position: absolute;
+}
+.magnet:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.09); }
+.magnet.dragging {
+  cursor: grabbing;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  transform: rotate(-1deg);
+  z-index: 999 !important;
+}
+
+/* relative when in tray/pool */
+.tray .magnet,
+.word-pool .magnet,
+.word-bank .magnet,
+.drop-zone .magnet { position: relative; display: inline-block; }
+
+/* ══════════════════════════════════════════════════════
+   FRIDGE POETRY
+   ══════════════════════════════════════════════════════ */
+#panel-fridge { flex-direction: column; }
+
+.fridge-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+.fridge-bar-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-light);
+  margin-right: 4px;
+}
+.cat-btn {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid transparent;
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.cat-btn:hover { color: var(--text); border-color: var(--border); }
+.cat-btn.active { color: var(--text); background: var(--bg); border-color: var(--border); }
+.fridge-clear {
+  margin-left: auto;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: 1px solid var(--border);
+  padding: 5px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.fridge-clear:hover { color: var(--error); border-color: var(--error); }
+
+.fridge-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+.tray {
+  width: 200px;
+  padding: 16px 12px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+.board {
+  flex: 1;
+  background: var(--board);
+  position: relative;
+  overflow: hidden;
+}
+.board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, var(--board-accent) 39px, var(--board-accent) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, var(--board-accent) 39px, var(--board-accent) 40px);
+  opacity: 0.35;
+}
+
+/* ══════════════════════════════════════════════════════
+   VERSE SCRAMBLE
+   ══════════════════════════════════════════════════════ */
+#panel-scramble {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  gap: 0;
+  background: var(--bg);
+}
+
+.scramble-wrap {
+  max-width: 560px;
+  width: 100%;
+}
+.scramble-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.scramble-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+.scramble-title {
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.scramble-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.drop-zone {
+  min-height: 56px;
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+  background: var(--surface);
+}
+.drop-zone.over { border-color: var(--accent); background: #fafaf8; }
+.drop-zone-placeholder {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  letter-spacing: 0.3px;
+}
+
+.word-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  min-height: 46px;
+  margin-bottom: 28px;
+}
+
+.scramble-feedback {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-height: 24px;
+  margin-bottom: 20px;
+}
+.fb-ok { color: var(--success); }
+.fb-no { color: var(--error); }
+.fb-win { color: var(--success); font-weight: 700; font-size: 1rem; }
+
+.scramble-answer {
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--hover);
+  border-radius: 8px;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  margin-bottom: 0;
+  transition: all 0.35s ease;
+}
+.scramble-answer.visible {
+  padding: 14px 20px;
+  max-height: 60px;
+  margin-bottom: 18px;
+}
+.scramble-answer .answer-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-light);
+  margin-right: 8px;
+}
+
+.scramble-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.btn {
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 8px 22px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn:hover { background: var(--hover); }
+.btn-dark {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-dark:hover { background: #2a2a2a; }
+
+.score-pill {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 28px;
+  letter-spacing: 0.5px;
+}
+
+/* ══════════════════════════════════════════════════════
+   LETTER MAGNETS
+   ══════════════════════════════════════════════════════ */
+#panel-letters { flex-direction: column; }
+
+.letters-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.letter-tile {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--magnet-bg);
+  border: 1px solid var(--magnet-border);
+  border-radius: 4px;
+  cursor: grab;
+  box-shadow: 0 1px 3px var(--magnet-shadow);
+  touch-action: none;
+  transition: box-shadow 0.15s, transform 0.08s;
+}
+.letter-tile:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.09); }
+.letter-tile.dragging {
+  cursor: grabbing;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  z-index: 999 !important;
+}
+.tray .letter-tile { position: relative; }
+.board .letter-tile { position: absolute; }
+
+.letters-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+.letter-tray {
+  width: 180px;
+  padding: 14px 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 4px;
+  justify-content: center;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* board reuse: .board class from fridge */
+
+/* ── Confetti ────────────────────────────────────────── */
+.confetti {
+  position: fixed;
+  width: 6px; height: 6px;
+  border-radius: 1px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  animation: cFall 1.2s ease-out forwards;
+}
+@keyframes cFall {
+  0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(60vh) rotate(600deg); }
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  nav { padding: 0 16px; }
+  .nav-logo { font-size: 0.95rem; }
+  .nav-tab { padding: 6px 10px; font-size: 0.75rem; }
+  .tray, .letter-tray { width: 130px; }
+  .scramble-wrap { padding: 0 8px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Magnet Poetry</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-p="fridge">Fridge</button>
+    <button class="nav-tab" data-p="scramble">Scramble</button>
+    <button class="nav-tab" data-p="letters">Letters</button>
+  </div>
+  <div class="nav-right">
+    <button class="sound-btn" id="sndBtn" title="Sound">♪</button>
+  </div>
+</nav>
+
+<!-- ═══ FRIDGE ═══════════════════════════════════════════ -->
+<section id="panel-fridge" class="panel active">
+  <div class="fridge-bar">
+    <span class="fridge-bar-label">Words</span>
+    <button class="cat-btn active" data-cat="nature">Nature</button>
+    <button class="cat-btn" data-cat="feelings">Feelings</button>
+    <button class="cat-btn" data-cat="action">Action</button>
+    <button class="cat-btn" data-cat="wonder">Wonder</button>
+    <button class="cat-btn" data-cat="glue">Glue words</button>
+    <button class="fridge-clear" id="clearBoard">Clear</button>
+  </div>
+  <div class="fridge-body">
+    <div class="tray" id="wordTray"></div>
+    <div class="board" id="fridgeBoard"></div>
+  </div>
+</section>
+
+<!-- ═══ SCRAMBLE ═════════════════════════════════════════ -->
+<section id="panel-scramble" class="panel">
+  <div class="scramble-wrap">
+    <div class="score-pill" id="scrScore">0 points</div>
+    <div class="scramble-header">
+      <div class="scramble-label">Unscramble</div>
+      <div class="scramble-title" id="scrTitle"></div>
+      <div class="scramble-hint" id="scrHint"></div>
+    </div>
+    <div class="drop-zone" id="scrZone">
+      <span class="drop-zone-placeholder">tap words below to place them here</span>
+    </div>
+    <div class="word-pool" id="scrPool"></div>
+    <div class="scramble-feedback" id="scrFb"></div>
+    <div class="scramble-answer" id="scrAnswer"></div>
+    <div class="scramble-actions">
+      <button class="btn" id="scrReset">Reset</button>
+      <button class="btn btn-dark" id="scrCheck">Check</button>
+      <button class="btn" id="scrShow" style="display:none">Show Answer</button>
+      <button class="btn" id="scrNext">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LETTERS ══════════════════════════════════════════ -->
+<section id="panel-letters" class="panel">
+  <div class="letters-bar">
+    <span class="fridge-bar-label">Set</span>
+    <button class="cat-btn active" data-set="upper">A B C</button>
+    <button class="cat-btn" data-set="lower">a b c</button>
+    <button class="cat-btn" data-set="num">1 2 3</button>
+    <button class="fridge-clear" id="clearLetters">Clear</button>
+  </div>
+  <div class="letters-body">
+    <div class="letter-tray" id="letterTray"></div>
+    <div class="board" id="lettersBoard"></div>
+  </div>
+</section>
+
+<script>
+/* ═══ Sound ══════════════════════════════════════════════ */
+const Snd = (() => {
+  let ctx, on = true;
+  const ac = () => ctx || (ctx = new (AudioContext || webkitAudioContext)());
+  const p = (t,f,d,v=0.15) => { if(!on) return; try { const c=ac(),o=c.createOscillator(),g=c.createGain(); o.type=t; o.frequency.value=f; g.gain.setValueAtTime(v,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d); o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime+d); } catch{} };
+  return {
+    toggle(){ on=!on; return on; },
+    pick(){ p('sine',700,.06,.1); },
+    drop(){ p('triangle',200,.1,.18); },
+    snap(){ p('sine',500,.05,.08); },
+    ok(){ p('sine',523,.12,.15); setTimeout(()=>p('sine',659,.12,.15),100); setTimeout(()=>p('sine',784,.2,.18),200); },
+    no(){ p('sawtooth',180,.2,.08); },
+    win(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>p('sine',f,.15,.14),i*90)); },
+  };
+})();
+
+/* ═══ Tabs ═══════════════════════════════════════════════ */
+document.querySelectorAll('.nav-tab').forEach(t => {
+  t.onclick = () => {
+    document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.p).classList.add('active');
+    Snd.snap();
+  };
+});
+document.getElementById('sndBtn').onclick = function(){ const o=Snd.toggle(); this.classList.toggle('muted',!o); };
+
+/* ═══ Helpers ════════════════════════════════════════════ */
+function shuffle(a){ const b=[...a]; for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]];} return b; }
+
+function confetti(x,y,n=20){
+  const cols=['#2c2c2c','#999','#bbb','#e0ddd7','#5a7a5a'];
+  for(let i=0;i<n;i++){
+    const d=document.createElement('div'); d.className='confetti';
+    const a=Math.random()*Math.PI*2, s=50+Math.random()*80;
+    d.style.left=(x+Math.cos(a)*s*.4)+'px'; d.style.top=y+'px';
+    d.style.background=cols[0|Math.random()*cols.length];
+    d.style.animationDuration=(1+Math.random()*.6)+'s';
+    document.body.appendChild(d); setTimeout(()=>d.remove(),1800);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   FRIDGE POETRY
+   ═══════════════════════════════════════════════════════ */
+const WORDS = {
+  nature:['sun','moon','star','sky','cloud','rain','wind','tree','leaf','flower','river','ocean','mountain','bird','butterfly','snow','grass','forest','stone','earth','dawn','dusk','petal','seed','root','breeze','storm','wave','garden','meadow','frost','dew','bloom','nest','feather','shell','vine','moss'],
+  feelings:['love','hope','joy','dream','peace','wonder','happy','brave','kind','gentle','warm','calm','bright','free','wild','soft','sweet','true','bold','dear','wish','grace','glow','tender','proud','merry','cozy'],
+  action:['sing','dance','fly','run','jump','swim','grow','shine','play','write','draw','paint','build','climb','explore','whisper','giggle','twirl','skip','soar','bloom','sparkle','imagine','create','wander','gather','share','laugh'],
+  wonder:['once','upon','always','forever','perhaps','suddenly','secret','hidden','ancient','golden','silver','crystal','velvet','midnight','fairy','dragon','unicorn','castle','kingdom','spell','treasure','legend','quest','hero','crown'],
+  glue:['the','a','an','is','are','was','in','on','at','to','of','and','but','or','with','for','from','by','my','your','our','this','that','it','I','we','they','so','if','as','not','can','will','no','yes','like','into','over','under','up'],
+};
+
+const fridgeBoard = document.getElementById('fridgeBoard');
+const wordTray = document.getElementById('wordTray');
+
+function loadTray(cat){
+  wordTray.innerHTML = '';
+  WORDS[cat].forEach(w => {
+    const m = document.createElement('div');
+    m.className = 'magnet';
+    m.textContent = w;
+    wordTray.appendChild(m);
+    m.addEventListener('mousedown', e => cloneToBoard(e, m));
+    m.addEventListener('touchstart', e => cloneToBoard(e, m), {passive:false});
+  });
+}
+
+function cloneToBoard(e, src){
+  e.preventDefault();
+  const pt = e.touches ? e.touches[0] : e;
+  const m = document.createElement('div');
+  m.className = 'magnet';
+  m.textContent = src.textContent;
+  fridgeBoard.appendChild(m);
+  const br = fridgeBoard.getBoundingClientRect();
+  m.style.left = (pt.clientX - br.left - 24) + 'px';
+  m.style.top  = (pt.clientY - br.top  - 10) + 'px';
+  startBoardDrag(m, e);
+  bindBoardMagnet(m);
+}
+
+function startBoardDrag(el, ev){
+  const br = fridgeBoard.getBoundingClientRect();
+  let oL = parseFloat(el.style.left), oT = parseFloat(el.style.top);
+  const p0 = ev.touches ? ev.touches[0] : ev;
+  let sx = p0.clientX, sy = p0.clientY;
+  el.classList.add('dragging'); Snd.pick();
+  const mv = e => { e.preventDefault(); const p=e.touches?e.touches[0]:e; el.style.left=(oL+p.clientX-sx)+'px'; el.style.top=(oT+p.clientY-sy)+'px'; };
+  const up = () => {
+    el.classList.remove('dragging'); Snd.drop();
+    document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up);
+    document.removeEventListener('touchmove',mv); document.removeEventListener('touchend',up);
+    const r=el.getBoundingClientRect();
+    if(r.right<br.left||r.left>br.right||r.bottom<br.top||r.top>br.bottom) el.remove();
+  };
+  document.addEventListener('mousemove',mv,{passive:false}); document.addEventListener('mouseup',up);
+  document.addEventListener('touchmove',mv,{passive:false}); document.addEventListener('touchend',up);
+}
+
+function bindBoardMagnet(el){
+  const down = e => { e.preventDefault(); e.stopPropagation(); startBoardDrag(el, e); };
+  el.addEventListener('mousedown', down);
+  el.addEventListener('touchstart', down, {passive:false});
+}
+
+document.querySelectorAll('.cat-btn[data-cat]').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.cat-btn[data-cat]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); loadTray(b.dataset.cat); Snd.snap();
+  };
+});
+document.getElementById('clearBoard').onclick = () => { fridgeBoard.querySelectorAll('.magnet').forEach(m=>m.remove()); Snd.snap(); };
+
+loadTray('nature');
+
+/* ═══════════════════════════════════════════════════════
+   VERSE SCRAMBLE
+   ═══════════════════════════════════════════════════════ */
+const VERSES = [
+  { t:"Nature's Song",      w:["the","sun","shines","on","the","morning","dew"],             h:"something you see at dawn" },
+  { t:"Garden Dance",       w:["butterflies","dance","among","the","flowers"],                h:"a colorful garden scene" },
+  { t:"Ocean Whisper",      w:["waves","whisper","secrets","to","the","shore"],               h:"listen to the sea" },
+  { t:"Starry Night",       w:["stars","paint","silver","dreams","across","the","sky"],       h:"look up at night" },
+  { t:"Little Bird",        w:["a","little","bird","sings","in","the","tree"],                h:"a sound in the forest" },
+  { t:"After Rain",         w:["after","rain","comes","a","beautiful","rainbow"],             h:"what follows a storm" },
+  { t:"Winter Ballet",      w:["snowflakes","twirl","and","dance","like","tiny","ballerinas"],h:"a cold and graceful sight" },
+  { t:"Bridges",            w:["kind","words","build","bridges","between","hearts"],          h:"how we connect" },
+  { t:"Night Watch",        w:["the","moon","watches","over","sleeping","children"],          h:"a nighttime guardian" },
+  { t:"Spring Awakening",   w:["seeds","wake","up","and","reach","for","the","light"],       h:"new beginnings" },
+  { t:"Hidden Worlds",      w:["brave","explorers","discover","hidden","worlds"],             h:"an adventure awaits" },
+  { t:"Rain Song",          w:["gentle","rain","helps","the","garden","grow"],                h:"nature's watering can" },
+];
+
+let sIdx = 0, sScore = 0, zoneWords = [], sTries = 0;
+
+function loadVerse(i){
+  const v = VERSES[i % VERSES.length];
+  document.getElementById('scrTitle').textContent = v.t;
+  document.getElementById('scrHint').textContent = v.h;
+  document.getElementById('scrFb').textContent = '';
+  document.getElementById('scrShow').style.display = 'none';
+  document.getElementById('scrAnswer').className = 'scramble-answer';
+  document.getElementById('scrAnswer').innerHTML = '';
+  sTries = 0;
+  zoneWords = [];
+  const zone = document.getElementById('scrZone');
+  zone.innerHTML = '<span class="drop-zone-placeholder">tap words below to place them here</span>';
+  const pool = document.getElementById('scrPool');
+  pool.innerHTML = '';
+  shuffle(v.w).forEach(w => {
+    const m = document.createElement('div');
+    m.className = 'magnet'; m.textContent = w; m.dataset.w = w;
+    pool.appendChild(m);
+    m.onclick = () => { if(m.parentElement===pool) toZone(m,w); };
+  });
+}
+
+function toZone(m, w){
+  const zone = document.getElementById('scrZone');
+  const pool = document.getElementById('scrPool');
+  const ph = zone.querySelector('.drop-zone-placeholder');
+  if(ph) ph.remove();
+  zone.appendChild(m); zoneWords.push(w); Snd.drop();
+  m.onclick = () => {
+    pool.appendChild(m);
+    zoneWords = [...zone.querySelectorAll('.magnet')].map(x=>x.dataset.w);
+    if(!zone.querySelector('.magnet'))
+      zone.innerHTML = '<span class="drop-zone-placeholder">tap words below to place them here</span>';
+    Snd.snap();
+    m.onclick = () => toZone(m, w);
+  };
+}
+
+document.getElementById('scrCheck').onclick = () => {
+  const v = VERSES[sIdx % VERSES.length];
+  const fb = document.getElementById('scrFb');
+  if(zoneWords.length !== v.w.length){ fb.textContent='place all words first'; fb.className='scramble-feedback fb-no'; Snd.no(); return; }
+  if(zoneWords.every((w,i)=>w===v.w[i])){
+    fb.textContent = 'Well done!'; fb.className='scramble-feedback fb-win'; sScore+=10; Snd.win();
+    const r=document.querySelector('.scramble-wrap').getBoundingClientRect();
+    confetti(r.left+r.width/2, r.top+60);
+    document.getElementById('scrShow').style.display = 'none';
+  } else {
+    sTries++;
+    const n = zoneWords.filter((w,i)=>w===v.w[i]).length;
+    fb.textContent = n+'/'+v.w.length+' in place — try again'; fb.className='scramble-feedback fb-no'; Snd.no();
+    if(sTries >= 2) document.getElementById('scrShow').style.display = '';
+  }
+  document.getElementById('scrScore').textContent = sScore+' points';
+};
+
+document.getElementById('scrShow').onclick = () => {
+  const v = VERSES[sIdx % VERSES.length];
+  const ans = document.getElementById('scrAnswer');
+  ans.innerHTML = '<span class="answer-label">Answer:</span>' + v.w.join(' ');
+  ans.classList.add('visible');
+  Snd.snap();
+};
+
+document.getElementById('scrReset').onclick = () => { loadVerse(sIdx); Snd.snap(); };
+document.getElementById('scrNext').onclick  = () => { sIdx++; loadVerse(sIdx); Snd.snap(); };
+
+loadVerse(0);
+
+/* ═══════════════════════════════════════════════════════
+   LETTER MAGNETS
+   ═══════════════════════════════════════════════════════ */
+const LSETS = {
+  upper: 'AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYYZZ'.split(''),
+  lower: 'aabbccddeeffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz'.split(''),
+  num:   '00112233445566778899..!!??,,'.split(''),
+};
+
+const letBoard = document.getElementById('lettersBoard');
+const letTray  = document.getElementById('letterTray');
+
+function loadLetters(set){
+  letTray.innerHTML = '';
+  LSETS[set].forEach(ch => {
+    const t = document.createElement('div');
+    t.className = 'letter-tile'; t.textContent = ch;
+    letTray.appendChild(t);
+    t.addEventListener('mousedown', e => cloneLetter(e, t));
+    t.addEventListener('touchstart', e => cloneLetter(e, t), {passive:false});
+  });
+}
+
+function cloneLetter(e, src){
+  e.preventDefault();
+  const pt = e.touches ? e.touches[0] : e;
+  const t = document.createElement('div');
+  t.className = 'letter-tile'; t.textContent = src.textContent;
+  letBoard.appendChild(t);
+  const br = letBoard.getBoundingClientRect();
+  t.style.position = 'absolute';
+  t.style.left = (pt.clientX - br.left - 18) + 'px';
+  t.style.top  = (pt.clientY - br.top  - 18) + 'px';
+  startLetDrag(t, e);
+  bindLetTile(t);
+}
+
+function startLetDrag(el, ev){
+  const br = letBoard.getBoundingClientRect();
+  let oL = parseFloat(el.style.left), oT = parseFloat(el.style.top);
+  const p0 = ev.touches ? ev.touches[0] : ev;
+  let sx = p0.clientX, sy = p0.clientY;
+  el.classList.add('dragging'); Snd.pick();
+  const mv = e => { e.preventDefault(); const p=e.touches?e.touches[0]:e; el.style.left=(oL+p.clientX-sx)+'px'; el.style.top=(oT+p.clientY-sy)+'px'; };
+  const up = () => {
+    el.classList.remove('dragging'); Snd.drop();
+    document.removeEventListener('mousemove',mv); document.removeEventListener('mouseup',up);
+    document.removeEventListener('touchmove',mv); document.removeEventListener('touchend',up);
+    const r=el.getBoundingClientRect();
+    if(r.right<br.left||r.left>br.right||r.bottom<br.top||r.top>br.bottom) el.remove();
+  };
+  document.addEventListener('mousemove',mv,{passive:false}); document.addEventListener('mouseup',up);
+  document.addEventListener('touchmove',mv,{passive:false}); document.addEventListener('touchend',up);
+}
+
+function bindLetTile(el){
+  const down = e => { e.preventDefault(); e.stopPropagation(); startLetDrag(el, e); };
+  el.addEventListener('mousedown', down);
+  el.addEventListener('touchstart', down, {passive:false});
+}
+
+document.querySelectorAll('.cat-btn[data-set]').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.cat-btn[data-set]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); loadLetters(b.dataset.set); Snd.snap();
+  };
+});
+document.getElementById('clearLetters').onclick = () => { letBoard.querySelectorAll('.letter-tile').forEach(m=>m.remove()); Snd.snap(); };
+
+loadLetters('upper');
+</script>
+</body>
+</html>
