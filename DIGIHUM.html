@@ -140,6 +140,130 @@ nav {
   flex:1; position:relative; overflow:hidden;
 }
 
+/* ── word dustbin on the “land” (realistic metal + grass) ─ */
+.word-bin {
+  position:absolute;
+  left:50%;
+  bottom:5%;
+  transform:translateX(-50%);
+  z-index:2;
+  pointer-events:none;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.word-bin-patch {
+  position:absolute;
+  bottom:-4px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:0;
+  width:88px;
+  height:22px;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse 100% 100% at 50% 30%, rgba(90,140,70,0.5) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 90% at 40% 50%, #4a7a38 0%, #3a6a28 45%, #2d5520 100%);
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.15), 0 2px 8px rgba(0,0,0,0.2);
+}
+.word-bin-inner {
+  position:relative;
+  z-index:2;
+  width:52px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.28));
+}
+.word-bin-lid {
+  width:48px;
+  height:10px;
+  border-radius:4px 4px 2px 2px;
+  background: linear-gradient(180deg, #c8ccd0 0%, #8a9098 45%, #6a7078 100%);
+  border:1px solid rgba(0,0,0,0.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+  margin-bottom:-1px;
+  transform-origin: right bottom;
+  transition: transform 0.18s ease;
+}
+.word-bin-lid::after {
+  content:'';
+  display:block;
+  margin:2px auto 0;
+  width:22px;
+  height:3px;
+  border-radius:2px;
+  background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+  opacity:0.85;
+}
+.word-bin-body {
+  position:relative;
+  width:44px;
+  height:48px;
+  border-radius:3px 3px 10px 10px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.12) 0%, transparent 25%, transparent 75%, rgba(0,0,0,0.08) 100%),
+    linear-gradient(180deg, #aeb4bc 0%, #7a828c 35%, #5a626c 70%, #4a525a 100%);
+  border:1px solid rgba(0,0,0,0.18);
+  border-top:none;
+  box-shadow: inset 2px 0 4px rgba(255,255,255,0.2), inset -2px 0 6px rgba(0,0,0,0.15);
+}
+.word-bin-body::before {
+  content:'';
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:3px;
+  height:70%;
+  border-radius:2px;
+  background: linear-gradient(180deg, #3a4048 0%, #2a3038 100%);
+  opacity:0.35;
+}
+.word-bin-foot {
+  width:38px;
+  height:6px;
+  margin-top:-2px;
+  border-radius:0 0 6px 6px;
+  background: linear-gradient(180deg, #3a424a 0%, #2a3238 100%);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+}
+.word-bin-hint {
+  position:relative;
+  z-index:3;
+  margin-top:6px;
+  font-size:0.58rem;
+  font-weight:700;
+  letter-spacing:0.4px;
+  text-transform:uppercase;
+  color:rgba(40,55,35,0.75);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+  transition: color 0.18s ease;
+}
+.word-bin--active .word-bin-lid {
+  transform: translateY(-4px) rotate(-8deg);
+}
+.word-bin--active .word-bin-body {
+  box-shadow:
+    inset 2px 0 4px rgba(255,255,255,0.2),
+    inset -2px 0 6px rgba(0,0,0,0.15),
+    0 0 0 2px rgba(255,255,255,0.28),
+    0 0 16px rgba(70,95,65,0.35);
+}
+.word-bin--active .word-bin-hint {
+  color:rgba(30,75,35,0.92);
+}
+.word-bin--shake .word-bin-inner {
+  animation: binShake 0.38s ease;
+}
+@keyframes binShake {
+  0%,100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-3px) rotate(-2deg); }
+  40% { transform: translateX(3px) rotate(2deg); }
+  60% { transform: translateX(-2px) rotate(-1deg); }
+  80% { transform: translateX(2px) rotate(1deg); }
+}
+
 /* ── right-side fixed panel (suffixes + connectors) ──── */
 .right-col {
   width:140px; display:flex; flex-direction:column;
@@ -207,6 +331,7 @@ nav {
   border-right:1px solid rgba(200,215,230,0.4);
 }
 .letters-board { flex:1; position:relative; overflow:hidden; }
+.letters-board .word-bin { bottom:6%; }
 
 /* ═══ SCRAMBLE ══════════════════════════════════════════ */
 #panel-scramble {
@@ -320,7 +445,17 @@ nav {
     <div class="tray-col">
       <div class="tray" id="wordTray"></div>
     </div>
-    <div class="sky-board" id="fridgeBoard"></div>
+    <div class="sky-board" id="fridgeBoard">
+      <div class="word-bin" id="wordDustbin" aria-hidden="true">
+        <div class="word-bin-patch"></div>
+        <div class="word-bin-inner">
+          <div class="word-bin-lid"></div>
+          <div class="word-bin-body"></div>
+          <div class="word-bin-foot"></div>
+        </div>
+        <div class="word-bin-hint">drop word to delete</div>
+      </div>
+    </div>
     <div class="right-col">
       <div class="right-section">
         <div class="right-label">Suffixes</div>
@@ -639,7 +774,45 @@ window.addEventListener('resize', () => { grassDrawn = false; });
 })();
 
 /* ═══ Sound ══════════════════════════════════════════════ */
-const Snd=(()=>{let ctx,on=true;const ac=()=>ctx||(ctx=new(AudioContext||webkitAudioContext)());const p=(t,f,d,v=.15)=>{if(!on)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+d);}catch{}};return{toggle(){on=!on;return on},pick(){p('sine',700,.06,.1)},drop(){p('triangle',200,.1,.18)},snap(){p('sine',500,.05,.08)},ok(){p('sine',523,.12,.15);setTimeout(()=>p('sine',659,.12,.15),100);setTimeout(()=>p('sine',784,.2,.18),200)},no(){p('sawtooth',180,.2,.08)},win(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>p('sine',f,.15,.14),i*90))},pop(){p('sine',600,.05,.12)},woosh(){if(!on)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=800;f.Q.value=0.5;o.type='sawtooth';o.frequency.setValueAtTime(300,c.currentTime);o.frequency.exponentialRampToValueAtTime(900,c.currentTime+0.15);o.frequency.exponentialRampToValueAtTime(400,c.currentTime+0.3);g.gain.setValueAtTime(0.12,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.35);o.connect(f).connect(g).connect(c.destination);o.start();o.stop(c.currentTime+0.35);}catch{}}};})();
+const Snd=(()=>{
+  let ctx,on=true;
+  const ac=()=>ctx||(ctx=new(AudioContext||webkitAudioContext)());
+  const p=(t,f,d,v=.15)=>{
+    if(!on)return;
+    try{
+      const c=ac(),o=c.createOscillator(),g=c.createGain();
+      o.type=t;o.frequency.value=f;
+      g.gain.setValueAtTime(v,c.currentTime);
+      g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);
+      o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+d);
+    }catch{}
+  };
+  return{
+    toggle(){on=!on;return on},
+    pick(){p('sine',700,.06,.1)},
+    drop(){p('triangle',200,.1,.18)},
+    snap(){p('sine',500,.05,.08)},
+    ok(){p('sine',523,.12,.15);setTimeout(()=>p('sine',659,.12,.15),100);setTimeout(()=>p('sine',784,.2,.18),200)},
+    no(){p('sawtooth',180,.2,.08)},
+    win(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>p('sine',f,.15,.14),i*90))},
+    pop(){p('sine',600,.05,.12)},
+    woosh(){
+      if(!on)return;
+      try{
+        const c=ac(),o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter();
+        f.type='bandpass';f.frequency.value=800;f.Q.value=0.5;
+        o.type='sawtooth';
+        o.frequency.setValueAtTime(300,c.currentTime);
+        o.frequency.exponentialRampToValueAtTime(900,c.currentTime+0.15);
+        o.frequency.exponentialRampToValueAtTime(400,c.currentTime+0.3);
+        g.gain.setValueAtTime(0.12,c.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.35);
+        o.connect(f).connect(g).connect(c.destination);o.start();o.stop(c.currentTime+0.35);
+      }catch{}
+    },
+    trash(){if(!on)return;p('triangle',85,.14,.2);setTimeout(()=>p('sine',200,.05,.09),35)}
+  };
+})();
 
 /* ═══ Tabs ═══════════════════════════════════════════════ */
 document.querySelectorAll('.nav-tab').forEach(t=>{t.onclick=()=>{document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));t.classList.add('active');document.getElementById('panel-'+t.dataset.p).classList.add('active');Snd.snap();};});
@@ -662,6 +835,27 @@ const CONNECTORS=['the','a','an','is','are','was','were','been','in','on','at','
 
 const board=document.getElementById('fridgeBoard');
 const tray=document.getElementById('wordTray');
+const wordDustbin=document.getElementById('wordDustbin');
+const wordDustbinBody=wordDustbin ? wordDustbin.querySelector('.word-bin-body') : null;
+
+function isOverDustbin(el){
+  if(!wordDustbin) return false;
+  const er=el.getBoundingClientRect();
+  const br=(wordDustbinBody||wordDustbin).getBoundingClientRect();
+  const cx=er.left + er.width/2;
+  const cy=er.top + er.height/2;
+  return cx>=br.left-6 && cx<=br.right+6 && cy>=br.top-6 && cy<=br.bottom+6;
+}
+function setDustbinActive(isActive){
+  if(!wordDustbin) return;
+  wordDustbin.classList.toggle('word-bin--active',isActive);
+}
+function shakeDustbin(){
+  if(!wordDustbin) return;
+  wordDustbin.classList.remove('word-bin--shake');
+  wordDustbin.offsetWidth;
+  wordDustbin.classList.add('word-bin--shake');
+}
 
 function mkMag(w,isGlue){
   const m=document.createElement('div');
@@ -694,14 +888,14 @@ function tryMerge(dropped){
   if(!isSuffix(txt)) return false;
   const suffix = txt.slice(1);
   const dr = dropped.getBoundingClientRect();
-  const cx = dr.left + dr.width/2, cy = dr.top + dr.height/2;
-  let best = null, bestDist = 60;
+  let best = null, bestDist = 34;
   board.querySelectorAll('.magnet').forEach(m => {
     if(m === dropped) return;
     if(isSuffix(m.textContent)) return;
     const mr = m.getBoundingClientRect();
-    const mx = mr.left + mr.width/2, my = mr.top + mr.height/2;
-    const dist = Math.sqrt((cx-mx)**2 + (cy-my)**2);
+    const dx = Math.max(mr.left - dr.right, dr.left - mr.right, 0);
+    const dy = Math.max(mr.top - dr.bottom, dr.top - mr.bottom, 0);
+    const dist = Math.hypot(dx,dy); // 0 when touching/overlapping from any side
     if(dist < bestDist){ bestDist = dist; best = m; }
   });
   if(!best) return false;
@@ -722,11 +916,13 @@ function dragStart(el,ev){
   let oL=parseFloat(el.style.left),oT=parseFloat(el.style.top);
   const p0=ev.touches?ev.touches[0]:ev;let sx=p0.clientX,sy=p0.clientY;
   el.classList.add('dragging');Snd.pick();
-  const mv=e=>{e.preventDefault();const p=e.touches?e.touches[0]:e;el.style.left=(oL+p.clientX-sx)+'px';el.style.top=(oT+p.clientY-sy)+'px';};
+  const mv=e=>{e.preventDefault();const p=e.touches?e.touches[0]:e;el.style.left=(oL+p.clientX-sx)+'px';el.style.top=(oT+p.clientY-sy)+'px';setDustbinActive(isOverDustbin(el));};
   const up=()=>{
     el.classList.remove('dragging');
+    setDustbinActive(false);
     document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);
     document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',up);
+    if(isOverDustbin(el)){ el.remove(); shakeDustbin(); Snd.trash(); return; }
     const r=el.getBoundingClientRect();
     if(r.right<br.left||r.left>br.right||r.bottom<br.top||r.top>br.bottom){ el.remove(); Snd.drop(); return; }
     if(!tryMerge(el)) Snd.drop();
