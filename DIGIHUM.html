@@ -140,41 +140,36 @@ nav {
   flex:1; position:relative; overflow:hidden;
 }
 
-/* ── right-side glue panel ────────────────────────────── */
-.glue-toggle {
-  position:absolute; right:0; top:50%; transform:translateY(-50%);
-  z-index:12; width:26px; height:60px;
-  background:rgba(255,255,255,0.75); backdrop-filter:blur(6px);
-  border:none; border-radius:8px 0 0 8px;
-  cursor:pointer; font-family:'Nunito',sans-serif;
-  font-size:0.55rem; font-weight:700; color:var(--text-muted);
-  writing-mode:vertical-rl; text-orientation:mixed; letter-spacing:1px;
-  text-transform:uppercase; transition:all 0.2s;
-  display:flex; align-items:center; justify-content:center;
-}
-.glue-toggle:hover { background:rgba(255,255,255,0.9); color:var(--text); }
-.glue-panel {
-  width:0; overflow:hidden; display:flex; flex-direction:column;
-  background:rgba(255,255,255,0.82); backdrop-filter:blur(8px);
+/* ── right-side fixed panel (suffixes + connectors) ──── */
+.right-col {
+  width:140px; display:flex; flex-direction:column;
+  background:rgba(255,255,255,0.8); backdrop-filter:blur(8px);
   border-left:1px solid rgba(200,215,230,0.4);
-  transition:width 0.25s ease;
 }
-.glue-panel.open { width:130px; }
-.glue-panel-head {
-  padding:8px 8px 4px; font-size:0.55rem; font-weight:700;
+.right-section {
+  flex:1; display:flex; flex-direction:column;
+  min-height:0; overflow:hidden;
+}
+.right-section + .right-section {
+  border-top:1px solid rgba(200,215,230,0.4);
+}
+.right-label {
+  padding:6px 8px 3px; font-size:0.55rem; font-weight:700;
   text-transform:uppercase; letter-spacing:0.8px;
-  color:var(--text-light); border-bottom:1px solid rgba(200,215,230,0.3);
-  display:flex; align-items:center; justify-content:space-between;
+  color:var(--text-light); flex-shrink:0;
 }
-.glue-close {
-  background:none; border:none; cursor:pointer;
-  font-size:0.85rem; color:var(--text-muted); line-height:1;
+.right-guide {
+  padding:0 8px 6px;
+  font-size:0.68rem;
+  font-weight:600;
+  color:var(--text-muted);
+  line-height:1.25;
 }
-.glue-close:hover { color:var(--text); }
-.glue-body {
-  flex:1; padding:6px 6px; overflow-y:auto;
+.right-body {
+  flex:1; padding:4px 6px; overflow-y:auto;
   display:flex; flex-wrap:wrap; align-content:flex-start; gap:4px;
 }
+.right-col .magnet { position:relative; display:inline-block; }
 
 /* ═══ LETTERS ══════════════════════════════════════════ */
 #panel-letters { flex-direction:column; }
@@ -273,6 +268,12 @@ nav {
 }
 
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+@keyframes mergePop {
+  0%   { transform:scale(1); opacity:1; }
+  40%  { transform:scale(1.25); }
+  100% { transform:scale(1); }
+}
+.magnet.merging { animation:mergePop 0.35s ease; }
 
 /* ═══ CONFETTI ══════════════════════════════════════════ */
 .confetti { position:fixed; width:6px; height:6px; border-radius:1px; z-index:9999; pointer-events:none; opacity:0; animation:cFall 1.2s ease-out forwards; }
@@ -283,8 +284,8 @@ nav {
   nav{padding:0 14px;}
   .nav-tab{padding:5px 10px;font-size:0.72rem;}
   .tray-col,.letter-tray{width:110px;}
+  .right-col{width:100px;}
   .scramble-wrap{padding:20px 16px;}
-  .glue-panel.open{width:100px;}
 }
 </style>
 </head>
@@ -319,12 +320,17 @@ nav {
     <div class="tray-col">
       <div class="tray" id="wordTray"></div>
     </div>
-    <div class="sky-board" id="fridgeBoard">
-      <button class="glue-toggle" id="glueToggle">Glue</button>
-    </div>
-    <div class="glue-panel" id="gluePanel">
-      <div class="glue-panel-head">Glue words <button class="glue-close" id="glueClose">&times;</button></div>
-      <div class="glue-body" id="glueBody"></div>
+    <div class="sky-board" id="fridgeBoard"></div>
+    <div class="right-col">
+      <div class="right-section">
+        <div class="right-label">Suffixes</div>
+        <div class="right-guide">Touch & drag a suffix onto a word. See the magic!</div>
+        <div class="right-body" id="suffixBody"></div>
+      </div>
+      <div class="right-section">
+        <div class="right-label">Connectors</div>
+        <div class="right-body" id="connectorBody"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -429,11 +435,11 @@ function drawHills(){
 
 /* ── sun with corona & god-rays ───────────────────────── */
 function drawSun(t){
-  const sx = W * 0.80, sy = H * 0.13 + Math.sin(t * 0.0002) * 5;
+  const sx = W * 0.80, sy = H * 0.13 + Math.sin(t * 0.00005) * 5;
   cx.save();
   for(let i = 0; i < 12; i++){
-    const a = (i / 12) * Math.PI * 2 + t * 0.00015;
-    const len = 90 + Math.sin(t * 0.001 + i) * 25;
+    const a = (i / 12) * Math.PI * 2 + t * 0.00003;
+    const len = 90 + Math.sin(t * 0.0002 + i) * 25;
     const g = cx.createLinearGradient(sx, sy,
       sx + Math.cos(a) * len, sy + Math.sin(a) * len);
     g.addColorStop(0, 'rgba(255,245,200,0.18)');
@@ -492,8 +498,8 @@ const clouds = [
 ];
 
 function drawCloud(c, t){
-  const xPos = ((c.x + t * c.speed * 0.015) % (W + 400)) - 200;
-  const yPos = H * c.y + Math.sin(t * 0.0004 + c.x) * 4;
+  const xPos = ((c.x + t * c.speed * 0.003) % (W + 400)) - 200;
+  const yPos = H * c.y + Math.sin(t * 0.00008 + c.x) * 4;
   cx.save();
   cx.translate(xPos, yPos);
   cx.scale(c.scale, c.scale);
@@ -535,9 +541,9 @@ const birds = [
 ];
 
 function drawBird(b, t){
-  const bx = ((b.x + t * b.speed * 0.012) % (W + 100)) - 50;
-  const by = H * b.y + Math.sin(t * 0.001 + b.phase) * 8;
-  const flap = Math.sin(t * 0.005 * b.flapSpeed + b.phase);
+  const bx = ((b.x + t * b.speed * 0.003) % (W + 100)) - 50;
+  const by = H * b.y + Math.sin(t * 0.0003 + b.phase) * 8;
+  const flap = Math.sin(t * 0.002 * b.flapSpeed + b.phase);
   cx.save();
   cx.translate(bx, by);
   cx.scale(b.size, b.size);
@@ -560,96 +566,6 @@ function drawBird(b, t){
   cx.restore();
 }
 
-/* ── tree silhouettes on the hills ────────────────────── */
-const trees = [
-  { x:0.06, h:50, trunk:8,  canopy:30, color:'#2a5518' },
-  { x:0.14, h:38, trunk:6,  canopy:24, color:'#305a1a' },
-  { x:0.22, h:55, trunk:9,  canopy:34, color:'#264e15' },
-  { x:0.35, h:42, trunk:7,  canopy:26, color:'#2e5818' },
-  { x:0.48, h:60, trunk:10, canopy:36, color:'#234a12' },
-  { x:0.58, h:35, trunk:5,  canopy:22, color:'#306018' },
-  { x:0.68, h:48, trunk:8,  canopy:28, color:'#285215' },
-  { x:0.78, h:56, trunk:9,  canopy:32, color:'#264e14' },
-  { x:0.88, h:40, trunk:6,  canopy:25, color:'#2c5616' },
-  { x:0.95, h:52, trunk:8,  canopy:30, color:'#234a12' },
-];
-
-function drawTree(tr){
-  const tx = W * tr.x;
-  const hillY = H * 0.87 + Math.sin((tx + 50) * 0.005) * 14
-    + Math.sin((tx + 85) * 0.0115) * 5.6;
-  const base = hillY;
-  cx.save();
-  cx.fillStyle = '#3a2510';
-  cx.fillRect(tx - tr.trunk/2, base - tr.h * 0.45, tr.trunk, tr.h * 0.45);
-  const cy = base - tr.h * 0.55;
-  const layers = [
-    { dy: 0, r: tr.canopy, a: 0.95 },
-    { dy: -tr.canopy*0.3, r: tr.canopy*0.8, a: 0.9 },
-    { dy: -tr.canopy*0.55, r: tr.canopy*0.55, a: 0.85 },
-  ];
-  layers.forEach(l => {
-    const cg = cx.createRadialGradient(tx, cy + l.dy - l.r*0.15, l.r*0.1,
-      tx, cy + l.dy, l.r);
-    cg.addColorStop(0, tr.color);
-    cg.addColorStop(0.6, tr.color);
-    cg.addColorStop(1, 'rgba(30,60,15,0.7)');
-    cx.globalAlpha = l.a;
-    cx.beginPath(); cx.arc(tx, cy + l.dy, l.r, 0, Math.PI * 2);
-    cx.fillStyle = cg; cx.fill();
-  });
-  cx.globalAlpha = 0.25;
-  const hlg = cx.createRadialGradient(tx + tr.canopy*0.2, cy - tr.canopy*0.5,
-    0, tx, cy, tr.canopy);
-  hlg.addColorStop(0, 'rgba(120,180,80,0.5)');
-  hlg.addColorStop(1, 'rgba(120,180,80,0)');
-  cx.beginPath(); cx.arc(tx, cy - tr.canopy*0.15, tr.canopy*0.7, 0, Math.PI*2);
-  cx.fillStyle = hlg; cx.fill();
-  cx.restore();
-}
-
-/* ── walking people silhouettes ───────────────────────── */
-const people = [
-  { x:-30, speed:22, size:1.0,  legSpeed:3.5, phase:0,   color:'#1a2a10' },
-  { x:-180,speed:16, size:0.75, legSpeed:4.0, phase:1.5, color:'#22330e' },
-  { x:-90, speed:19, size:0.85, legSpeed:3.8, phase:3.0, color:'#182810' },
-  { x:-250,speed:14, size:0.65, legSpeed:4.2, phase:4.5, color:'#1e2e0e' },
-];
-
-function drawPerson(p, t){
-  const px = ((p.x + t * p.speed * 0.008) % (W + 60)) - 30;
-  const groundY = H * 0.90 + Math.sin((px + 200) * 0.007) * 6;
-  const legSwing = Math.sin(t * 0.004 * p.legSpeed + p.phase) * 0.35;
-  const armSwing = -legSwing;
-  const s = p.size;
-  cx.save();
-  cx.translate(px, groundY);
-  cx.scale(s, s);
-  cx.fillStyle = p.color;
-  cx.strokeStyle = p.color;
-  cx.lineWidth = 3;
-  cx.lineCap = 'round';
-  cx.beginPath(); cx.arc(0, -40, 6, 0, Math.PI * 2); cx.fill();
-  cx.beginPath(); cx.moveTo(0, -34); cx.lineTo(0, -14); cx.stroke();
-  cx.beginPath();
-  cx.moveTo(0, -14);
-  cx.lineTo(Math.sin(legSwing) * 10, 0);
-  cx.stroke();
-  cx.beginPath();
-  cx.moveTo(0, -14);
-  cx.lineTo(Math.sin(-legSwing) * 10, 0);
-  cx.stroke();
-  cx.lineWidth = 2.2;
-  cx.beginPath();
-  cx.moveTo(0, -30);
-  cx.lineTo(Math.sin(armSwing) * 8, -20);
-  cx.stroke();
-  cx.beginPath();
-  cx.moveTo(0, -30);
-  cx.lineTo(Math.sin(-armSwing) * 8, -20);
-  cx.stroke();
-  cx.restore();
-}
 
 /* ── atmospheric haze ─────────────────────────────────── */
 function drawAtmosphere(){
@@ -710,14 +626,11 @@ function frame(t){
   clouds.forEach(c => drawCloud(c, t));
   birds.forEach(b => drawBird(b, t));
   drawHills();
-  trees.forEach(tr => drawTree(tr));
   if(!grassDrawn){
     drawGrassDetail();
     drawFlowers();
     grassDrawn = true;
-    grassImg = cx.getImageData(0, 0, W, H);
   }
-  people.forEach(p => drawPerson(p, t));
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -726,7 +639,7 @@ window.addEventListener('resize', () => { grassDrawn = false; });
 })();
 
 /* ═══ Sound ══════════════════════════════════════════════ */
-const Snd=(()=>{let ctx,on=true;const ac=()=>ctx||(ctx=new(AudioContext||webkitAudioContext)());const p=(t,f,d,v=.15)=>{if(!on)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+d);}catch{}};return{toggle(){on=!on;return on},pick(){p('sine',700,.06,.1)},drop(){p('triangle',200,.1,.18)},snap(){p('sine',500,.05,.08)},ok(){p('sine',523,.12,.15);setTimeout(()=>p('sine',659,.12,.15),100);setTimeout(()=>p('sine',784,.2,.18),200)},no(){p('sawtooth',180,.2,.08)},win(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>p('sine',f,.15,.14),i*90))},pop(){p('sine',600,.05,.12)}};})();
+const Snd=(()=>{let ctx,on=true;const ac=()=>ctx||(ctx=new(AudioContext||webkitAudioContext)());const p=(t,f,d,v=.15)=>{if(!on)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+d);}catch{}};return{toggle(){on=!on;return on},pick(){p('sine',700,.06,.1)},drop(){p('triangle',200,.1,.18)},snap(){p('sine',500,.05,.08)},ok(){p('sine',523,.12,.15);setTimeout(()=>p('sine',659,.12,.15),100);setTimeout(()=>p('sine',784,.2,.18),200)},no(){p('sawtooth',180,.2,.08)},win(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>p('sine',f,.15,.14),i*90))},pop(){p('sine',600,.05,.12)},woosh(){if(!on)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain(),f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=800;f.Q.value=0.5;o.type='sawtooth';o.frequency.setValueAtTime(300,c.currentTime);o.frequency.exponentialRampToValueAtTime(900,c.currentTime+0.15);o.frequency.exponentialRampToValueAtTime(400,c.currentTime+0.3);g.gain.setValueAtTime(0.12,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.35);o.connect(f).connect(g).connect(c.destination);o.start();o.stop(c.currentTime+0.35);}catch{}}};})();
 
 /* ═══ Tabs ═══════════════════════════════════════════════ */
 document.querySelectorAll('.nav-tab').forEach(t=>{t.onclick=()=>{document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));t.classList.add('active');document.getElementById('panel-'+t.dataset.p).classList.add('active');Snd.snap();};});
@@ -742,9 +655,10 @@ const WORDS={
   nature:['sun','moon','star','sky','cloud','rain','wind','tree','leaf','flower','river','ocean','mountain','bird','butterfly','snow','grass','forest','stone','earth','dawn','dusk','petal','seed','root','breeze','storm','wave','garden','meadow','frost','dew','bloom','nest','feather','shell','vine','moss'],
   feelings:['love','hope','joy','dream','peace','wonder','happy','brave','kind','gentle','warm','calm','bright','free','wild','soft','sweet','true','bold','dear','wish','grace','glow','tender','proud','merry','cozy'],
   action:['sing','dance','fly','run','jump','swim','grow','shine','play','write','draw','paint','build','climb','explore','whisper','giggle','twirl','skip','soar','bloom','sparkle','imagine','create','wander','gather','share','laugh'],
-  wonder:['once','upon','always','forever','perhaps','suddenly','secret','hidden','ancient','golden','silver','crystal','velvet','midnight','fairy','dragon','unicorn','castle','kingdom','spell','treasure','legend','quest','hero','crown'],
+  wonder:['once','upon','always','forever','perhaps','suddenly','secret','hidden','ancient','golden','silver','crystal','velvet','midnight','fairy','dragon','unicorn','castle','kingdom','spell','treasure','legend','quest','hero','crown','magic','mystery','enchant'],
 };
-const GLUE=['the','a','an','is','are','was','in','on','at','to','of','and','but','or','with','for','from','by','my','your','our','this','that','it','I','we','they','so','if','as','not','can','will','like','into','over','under','up'];
+const SUFFIX_WORDS=['-s','-es','-ed','-ing','-ly','-er','-est','-ful','-ness','-less','-y','-ish','-ous','-ment','-tion','-able','-en','-al','-ic','-ive'];
+const CONNECTORS=['the','a','an','is','are','was','were','been','in','on','at','to','of','and','but','or','with','for','from','by','my','your','our','this','that','it','I','we','they','he','she','so','if','as','not','no','yes','can','will','would','could','shall','may','do','does','did','has','have','had','than','then','when','where','how','what','who','why','all','each','every','some','any','many','much','more','most','very','too','also','just','only','still','now','here','there','up','down','out','off','away','back','over','under','into','upon','like','about'];
 
 const board=document.getElementById('fridgeBoard');
 const tray=document.getElementById('wordTray');
@@ -758,10 +672,12 @@ function mkMag(w,isGlue){
   return m;
 }
 function loadTray(cat){tray.innerHTML='';WORDS[cat].forEach(w=>tray.appendChild(mkMag(w,false)));}
-function loadGlue(){const s=document.getElementById('glueBody');s.innerHTML='';GLUE.forEach(w=>s.appendChild(mkMag(w,true)));}
-
-document.getElementById('glueToggle').onclick=()=>{document.getElementById('gluePanel').classList.add('open');Snd.snap();};
-document.getElementById('glueClose').onclick=()=>{document.getElementById('gluePanel').classList.remove('open');Snd.snap();};
+function loadRightPanel(){
+  const sb=document.getElementById('suffixBody');
+  SUFFIX_WORDS.forEach(w=>sb.appendChild(mkMag(w,true)));
+  const cb=document.getElementById('connectorBody');
+  CONNECTORS.forEach(w=>cb.appendChild(mkMag(w,true)));
+}
 
 function clone(e,src){
   e.preventDefault();const pt=e.touches?e.touches[0]:e;
@@ -770,13 +686,51 @@ function clone(e,src){
   m.style.left=(pt.clientX-br.left-24)+'px';m.style.top=(pt.clientY-br.top-10)+'px';
   dragStart(m,e);bindMag(m);
 }
+const SUFFIXES=['-s','-es','-ed','-ing','-ly','-er','-est','-ful','-ness','-less','-y','-ish','-ous','-ment','-tion','-able','-en','-al','-ic','-ive'];
+function isSuffix(txt){ return SUFFIXES.includes(txt); }
+
+function tryMerge(dropped){
+  const txt = dropped.textContent;
+  if(!isSuffix(txt)) return false;
+  const suffix = txt.slice(1);
+  const dr = dropped.getBoundingClientRect();
+  const cx = dr.left + dr.width/2, cy = dr.top + dr.height/2;
+  let best = null, bestDist = 60;
+  board.querySelectorAll('.magnet').forEach(m => {
+    if(m === dropped) return;
+    if(isSuffix(m.textContent)) return;
+    const mr = m.getBoundingClientRect();
+    const mx = mr.left + mr.width/2, my = mr.top + mr.height/2;
+    const dist = Math.sqrt((cx-mx)**2 + (cy-my)**2);
+    if(dist < bestDist){ bestDist = dist; best = m; }
+  });
+  if(!best) return false;
+  const combined = best.textContent + suffix;
+  best.textContent = combined;
+  best.classList.remove('magnet-glue');
+  best.classList.add('merging');
+  setTimeout(()=> best.classList.remove('merging'), 400);
+  dropped.remove();
+  Snd.woosh();
+  const br = best.getBoundingClientRect();
+  confetti(br.left + br.width/2, br.top, 10);
+  return true;
+}
+
 function dragStart(el,ev){
   const br=board.getBoundingClientRect();
   let oL=parseFloat(el.style.left),oT=parseFloat(el.style.top);
   const p0=ev.touches?ev.touches[0]:ev;let sx=p0.clientX,sy=p0.clientY;
   el.classList.add('dragging');Snd.pick();
   const mv=e=>{e.preventDefault();const p=e.touches?e.touches[0]:e;el.style.left=(oL+p.clientX-sx)+'px';el.style.top=(oT+p.clientY-sy)+'px';};
-  const up=()=>{el.classList.remove('dragging');Snd.drop();document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',up);const r=el.getBoundingClientRect();if(r.right<br.left||r.left>br.right||r.bottom<br.top||r.top>br.bottom)el.remove();};
+  const up=()=>{
+    el.classList.remove('dragging');
+    document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);
+    document.removeEventListener('touchmove',mv);document.removeEventListener('touchend',up);
+    const r=el.getBoundingClientRect();
+    if(r.right<br.left||r.left>br.right||r.bottom<br.top||r.top>br.bottom){ el.remove(); Snd.drop(); return; }
+    if(!tryMerge(el)) Snd.drop();
+  };
   document.addEventListener('mousemove',mv,{passive:false});document.addEventListener('mouseup',up);
   document.addEventListener('touchmove',mv,{passive:false});document.addEventListener('touchend',up);
 }
@@ -785,7 +739,7 @@ function bindMag(el){const d=e=>{e.preventDefault();e.stopPropagation();dragStar
 document.querySelectorAll('.cat-btn[data-cat]').forEach(b=>{b.onclick=()=>{document.querySelectorAll('.cat-btn[data-cat]').forEach(x=>x.classList.remove('active'));b.classList.add('active');loadTray(b.dataset.cat);Snd.snap();};});
 document.getElementById('clearBoard').onclick=()=>{board.querySelectorAll('.magnet').forEach(m=>m.remove());Snd.snap();};
 
-loadTray('nature');loadGlue();
+loadTray('nature');loadRightPanel();
 
 /* ═══════════════════════════════════════════════════════
    SCRAMBLE
