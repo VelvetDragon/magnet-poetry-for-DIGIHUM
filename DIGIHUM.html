@@ -143,15 +143,17 @@ nav {
 /* ── word dustbin on the “land” (realistic metal + grass) ─ */
 .word-bin {
   position:absolute;
-  left:50%;
+  right:24px;      /* move to right */
+  left:auto;       /* remove center positioning */
   bottom:5%;
-  transform:translateX(-50%);
+  transform:none;  /* remove translateX(-50%) */
   z-index:2;
   pointer-events:none;
   display:flex;
   flex-direction:column;
   align-items:center;
 }
+
 .word-bin-patch {
   position:absolute;
   bottom:-4px;
