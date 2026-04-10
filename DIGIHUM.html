@@ -143,17 +143,15 @@ nav {
 /* ── word dustbin on the “land” (realistic metal + grass) ─ */
 .word-bin {
   position:absolute;
-  right:24px;      /* move to right */
-  left:auto;       /* remove center positioning */
+  left:50%;
   bottom:5%;
-  transform:none;  /* remove translateX(-50%) */
+  transform:translateX(-50%);
   z-index:2;
   pointer-events:none;
   display:flex;
   flex-direction:column;
   align-items:center;
 }
-
 .word-bin-patch {
   position:absolute;
   bottom:-4px;
@@ -406,13 +404,92 @@ nav {
 .confetti { position:fixed; width:6px; height:6px; border-radius:1px; z-index:9999; pointer-events:none; opacity:0; animation:cFall 1.2s ease-out forwards; }
 @keyframes cFall { 0%{opacity:1;transform:translateY(0) rotate(0)} 100%{opacity:0;transform:translateY(60vh) rotate(600deg)} }
 
+/* ═══ MOBILE DRAWER ══════════════════════════════════════ */
+.mob-backdrop {
+  display:none; position:fixed; inset:0; z-index:19;
+  background:rgba(0,0,0,0.35);
+}
+.mob-backdrop.open { display:block; }
+.mob-bot-bar {
+  display:none; position:fixed; bottom:0; left:0; right:0;
+  height:52px; z-index:18;
+  background:rgba(255,255,255,0.96); backdrop-filter:blur(10px);
+  border-top:1px solid var(--border);
+  align-items:center; justify-content:center; gap:10px;
+  padding:0 16px;
+}
+.mob-panel-btns { display:flex; gap:10px; }
+.mob-open-btn {
+  font-family:'Nunito',sans-serif; font-size:0.82rem; font-weight:700;
+  padding:8px 18px; border-radius:20px; border:1px solid var(--border);
+  background:rgba(255,255,255,0.8); color:var(--accent); cursor:pointer;
+  transition:all 0.2s; white-space:nowrap;
+}
+.mob-open-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
 /* ═══ RESPONSIVE ════════════════════════════════════════ */
 @media(max-width:640px){
-  nav{padding:0 14px;}
-  .nav-tab{padding:5px 10px;font-size:0.72rem;}
-  .tray-col,.letter-tray{width:110px;}
-  .right-col{width:100px;}
-  .scramble-wrap{padding:20px 16px;}
+  /* Nav */
+  nav { padding:0 10px; }
+  .nav-logo { font-size:0.82rem; }
+  .nav-tab { padding:4px 8px; font-size:0.68rem; }
+  .nav-tabs { gap:2px; }
+
+  /* Panels height accounts for bottom bar */
+  .panel { height:calc(100vh - 50px - 52px); }
+
+  /* Fridge: sidebars become bottom sheets */
+  .tray-col {
+    position:fixed; bottom:52px; left:0; right:0;
+    width:100% !important; height:52vh; max-height:52vh;
+    border-right:none; border-top:1px solid var(--border);
+    border-radius:20px 20px 0 0; z-index:20;
+    transform:translateY(110%); transition:transform 0.3s ease;
+    box-shadow:0 -8px 28px rgba(0,0,0,0.14);
+  }
+  .tray-col.mob-open { transform:translateY(0); }
+  .tray { overflow-y:auto; flex:1; padding:10px; }
+
+  .right-col {
+    position:fixed; bottom:52px; left:0; right:0;
+    width:100% !important; height:52vh; max-height:52vh;
+    border-left:none; border-top:1px solid var(--border);
+    border-radius:20px 20px 0 0; z-index:20;
+    transform:translateY(110%); transition:transform 0.3s ease;
+    box-shadow:0 -8px 28px rgba(0,0,0,0.14);
+    flex-direction:column;
+  }
+  .right-col.mob-open { transform:translateY(0); }
+  .right-body { flex:1; overflow-y:auto; }
+
+  /* Board fills full width */
+  .fridge-body { flex:1; overflow:hidden; }
+  .sky-board { flex:1; }
+
+  /* Letter tray becomes a bottom sheet */
+  .letter-tray {
+    position:fixed; bottom:52px; left:0; right:0;
+    width:100% !important; height:52vh; max-height:52vh;
+    border-right:none; border-top:1px solid var(--border);
+    border-radius:20px 20px 0 0; z-index:20;
+    transform:translateY(110%); transition:transform 0.3s ease;
+    box-shadow:0 -8px 28px rgba(0,0,0,0.14);
+    overflow-y:auto; flex-wrap:wrap; justify-content:center;
+    align-content:flex-start; padding:10px;
+  }
+  .letter-tray.mob-open { transform:translateY(0); }
+  .letters-body { flex:1; overflow:hidden; }
+
+  /* Scramble panel */
+  .scramble-wrap { padding:16px 14px; }
+  #panel-scramble { justify-content:flex-start; padding-top:16px; overflow-y:auto; }
+
+  /* Scrollable top bars */
+  .fridge-bar { overflow-x:auto; flex-wrap:nowrap; }
+  .letters-bar { overflow-x:auto; flex-wrap:nowrap; }
+
+  /* Show mobile bottom bar */
+  .mob-bot-bar { display:flex; }
 }
 </style>
 </head>
@@ -508,6 +585,18 @@ nav {
     <div class="letters-board" id="lettersBoard"></div>
   </div>
 </section>
+
+<!-- ═══ MOBILE BOTTOM BAR ══════════════════════════════ -->
+<div class="mob-backdrop" id="digBackdrop"></div>
+<div class="mob-bot-bar" id="digMobBar">
+  <div class="mob-panel-btns" id="digFridgeBtns">
+    <button class="mob-open-btn" id="digWordsBtn">📦 Words</button>
+    <button class="mob-open-btn" id="digExtrasBtn">✨ Extras</button>
+  </div>
+  <div class="mob-panel-btns" id="digLettersBtns" style="display:none">
+    <button class="mob-open-btn" id="digTilesBtn">🔤 Tiles</button>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════════
@@ -859,12 +948,25 @@ function shakeDustbin(){
   wordDustbin.classList.add('word-bin--shake');
 }
 
+function tapPlace(w,isGlue){
+  const m=document.createElement('div');
+  m.className='magnet'+(isGlue?' magnet-glue':'');
+  m.textContent=w;
+  board.appendChild(m);
+  const br=board.getBoundingClientRect();
+  const pw=Math.max(60,w.length*10), ph=34, margin=24;
+  m.style.left=(margin+Math.random()*(Math.max(10,br.width-margin*2-pw)))+'px';
+  m.style.top=(margin+Math.random()*(Math.max(10,br.height-margin*2-ph*4)))+'px';
+  bindMag(m);
+  Snd.drop();
+  if(window.closeMobDrawers)window.closeMobDrawers();
+}
 function mkMag(w,isGlue){
   const m=document.createElement('div');
   m.className='magnet'+(isGlue?' magnet-glue':'');
   m.textContent=w;
   m.addEventListener('mousedown',e=>clone(e,m));
-  m.addEventListener('touchstart',e=>clone(e,m),{passive:false});
+  m.addEventListener('touchstart',e=>{e.preventDefault();tapPlace(w,isGlue);},{passive:false});
   return m;
 }
 function loadTray(cat){tray.innerHTML='';WORDS[cat].forEach(w=>tray.appendChild(mkMag(w,false)));}
@@ -878,7 +980,8 @@ function loadRightPanel(){
 function clone(e,src){
   e.preventDefault();const pt=e.touches?e.touches[0]:e;
   const m=document.createElement('div');m.className=src.className;m.textContent=src.textContent;
-  board.appendChild(m);const br=board.getBoundingClientRect();
+  board.appendChild(m);if(window.closeMobDrawers)window.closeMobDrawers();
+  const br=board.getBoundingClientRect();
   m.style.left=(pt.clientX-br.left-24)+'px';m.style.top=(pt.clientY-br.top-10)+'px';
   dragStart(m,e);bindMag(m);
 }
@@ -997,6 +1100,19 @@ const LSETS={
 const letBoard=document.getElementById('lettersBoard');
 const letTray=document.getElementById('letterTray');
 
+function tapPlaceLetter(ch){
+  const t=document.createElement('div');
+  t.className='letter-tile';t.textContent=ch;
+  letBoard.appendChild(t);
+  if(window.closeMobDrawers)window.closeMobDrawers();
+  const br=letBoard.getBoundingClientRect();
+  const margin=20;
+  t.style.position='absolute';
+  t.style.left=(margin+Math.random()*(Math.max(10,br.width-margin*2-38)))+'px';
+  t.style.top=(margin+Math.random()*(Math.max(10,br.height-margin*2-38)))+'px';
+  bindLetTile(t);
+  Snd.drop();
+}
 function loadLetters(set){
   letTray.innerHTML='';
   LSETS[set].forEach(ch=>{
@@ -1004,7 +1120,7 @@ function loadLetters(set){
     t.className='letter-tile';t.textContent=ch;
     letTray.appendChild(t);
     t.addEventListener('mousedown',e=>cloneLet(e,t));
-    t.addEventListener('touchstart',e=>cloneLet(e,t),{passive:false});
+    t.addEventListener('touchstart',e=>{e.preventDefault();tapPlaceLetter(ch);},{passive:false});
   });
 }
 function cloneLet(e,src){
@@ -1012,7 +1128,7 @@ function cloneLet(e,src){
   const pt=e.touches?e.touches[0]:e;
   const t=document.createElement('div');
   t.className='letter-tile';t.textContent=src.textContent;
-  letBoard.appendChild(t);
+  letBoard.appendChild(t);if(window.closeMobDrawers)window.closeMobDrawers();
   const br=letBoard.getBoundingClientRect();
   t.style.position='absolute';
   t.style.left=(pt.clientX-br.left-17)+'px';
@@ -1035,6 +1151,51 @@ function bindLetTile(el){const d=e=>{e.preventDefault();e.stopPropagation();star
 document.querySelectorAll('.cat-btn[data-set]').forEach(b=>{b.onclick=()=>{document.querySelectorAll('.cat-btn[data-set]').forEach(x=>x.classList.remove('active'));b.classList.add('active');loadLetters(b.dataset.set);Snd.snap();};});
 document.getElementById('clearLetters').onclick=()=>{letBoard.querySelectorAll('.letter-tile').forEach(m=>m.remove());Snd.snap();};
 loadLetters('upper');
+
+/* ═══ MOBILE DRAWER LOGIC ═══════════════════════════════ */
+(function(){
+  const backdrop  = document.getElementById('digBackdrop');
+  const trayCol   = document.querySelector('.tray-col');
+  const rightCol  = document.querySelector('.right-col');
+  const letterTr  = document.querySelector('.letter-tray');
+  const wordsBtn  = document.getElementById('digWordsBtn');
+  const extrasBtn = document.getElementById('digExtrasBtn');
+  const tilesBtn  = document.getElementById('digTilesBtn');
+  const mobBar    = document.getElementById('digMobBar');
+  const fridgeBtns  = document.getElementById('digFridgeBtns');
+  const letterBtns  = document.getElementById('digLettersBtns');
+
+  window.closeMobDrawers = function(){
+    [trayCol, rightCol, letterTr].forEach(el => el && el.classList.remove('mob-open'));
+    [wordsBtn, extrasBtn, tilesBtn].forEach(el => el && el.classList.remove('active'));
+    backdrop.classList.remove('open');
+  };
+
+  function openSheet(sheetEl, btn) {
+    window.closeMobDrawers();
+    sheetEl.classList.add('mob-open');
+    btn.classList.add('active');
+    backdrop.classList.add('open');
+  }
+
+  wordsBtn  && wordsBtn.addEventListener('click',  () => openSheet(trayCol,  wordsBtn));
+  extrasBtn && extrasBtn.addEventListener('click', () => openSheet(rightCol, extrasBtn));
+  tilesBtn  && tilesBtn.addEventListener('click',  () => openSheet(letterTr, tilesBtn));
+  backdrop.addEventListener('click', window.closeMobDrawers);
+
+  // Sync panel visibility with active tab
+  const panelMap = {
+    'fridge':   () => { fridgeBtns.style.display='flex'; letterBtns.style.display='none'; mobBar.style.display='flex'; },
+    'letters':  () => { fridgeBtns.style.display='none'; letterBtns.style.display='flex'; mobBar.style.display='flex'; },
+    'scramble': () => { mobBar.style.display='none'; },
+  };
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      window.closeMobDrawers();
+      if(panelMap[t.dataset.p]) panelMap[t.dataset.p]();
+    });
+  });
+})();
 </script>
 </body>
 </html>
